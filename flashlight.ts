@@ -38,7 +38,7 @@ export const tweenWith = <T>(
   easing: Easing.Easing = Easing.linear,
 ): Animation<T> => {
   const anim = (frame: number) =>
-    lerp(0, 1, easing(frameToProgress(frame, duration)));
+    lerp(easing(frameToProgress(frame, duration)));
   anim.duration = duration;
   return anim;
 };
@@ -66,6 +66,20 @@ export const delay = <T>(
   const delayed = (frame: number) => anim(clamp(frame - duration, 0, duration));
   delayed.duration = duration + anim.duration;
   return delayed;
+};
+
+/** Repeat an animation a given number of times (default infinite) */
+export const repeat = <T>(
+  anim: Animation<T>,
+  times: number = Infinity,
+): Animation<T> => {
+  const xduration = times * anim.duration;
+  const repeated = (frame: number) => {
+    if (frame >= xduration) return anim(anim.duration);
+    return anim(frame % anim.duration);
+  };
+  repeated.duration = xduration;
+  return repeated;
 };
 
 /** Sequence two animations */
