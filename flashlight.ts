@@ -10,6 +10,8 @@ export type Animation<T> = ((frame: number) => T) & {
   duration: number;
 };
 
+export type Lerp<T> = (progress: number) => T;
+
 /** Convert a frame number to a progress value between 0 and 1 */
 export const frameToProgress = (frame: number, duration: number): number =>
   clamp(frame / duration, 0, 1);
@@ -27,7 +29,22 @@ export const lerp = (from: number, to: number, progress: number) =>
   from + Math.max(to - from, 0) * clamp(progress, 0, 1);
 
 /**
- * Create a tweening function that takes a frame number and returns a float
+ * Create a complex tween using a lerp function that takes a progress
+ * value from 0 to 1 and returns a value of type T.
+ */
+export const tweenWith = <T>(
+  lerp: Lerp<T>,
+  duration: number,
+  easing: Easing.Easing = Easing.linear,
+): Animation<T> => {
+  const anim = (frame: number) =>
+    lerp(0, 1, easing(frameToProgress(frame, duration)));
+  anim.duration = duration;
+  return anim;
+};
+
+/**
+ * Create a tweening function that takes a frame number and returns a number
  * between `from` and `to`.
  */
 export const tween = (
@@ -35,12 +52,8 @@ export const tween = (
   to: number,
   duration: number,
   easing: Easing.Easing = Easing.linear,
-): Animation<number> => {
-  const anim = (frame: number) =>
-    lerp(from, to, easing(frameToProgress(frame, duration)));
-  anim.duration = duration;
-  return anim;
-};
+): Animation<number> =>
+  tweenWith((progress) => lerp(from, to, progress), duration, easing);
 
 /**
  * Delay an animation by a given duration
