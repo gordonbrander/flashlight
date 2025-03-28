@@ -10,7 +10,12 @@ export type Animation<T> = ((frame: number) => T) & {
   duration: number;
 };
 
-export type Lerp<T> = (progress: number) => T;
+/**
+ * A tween is a function that takes a progress value from 0 to 1 and returns a value for that progress.
+ * Tweens are relative. They don't think about frames or timing, so they can be rescaled.
+ * To use a tween for an animatino of a specific duration, use `anim()`.
+ */
+export type Tween<T> = (progress: number) => T;
 
 /** Convert a frame number to a progress value between 0 and 1 */
 export const frameToProgress = (frame: number, duration: number): number =>
@@ -21,39 +26,52 @@ export const progressToFrame = (progress: number, duration: number): number =>
   clamp(progress * duration, 0, duration);
 
 /** Convert an elapsed time in milliseconds to a frame number */
-export const elapsedToFrame = (elapsedMs: number, fps: number): number =>
+export const elapsedToFrame = (elapsedMs: number, fps: number = 60): number =>
   Math.floor(elapsedMs / (1000 / fps));
 
 /** Linearly interpolate between two values using a relative progress value betwen 0 and 1 */
 export const lerp = (from: number, to: number, progress: number) =>
-  from + Math.max(to - from, 0) * clamp(progress, 0, 1);
+  from + (to - from) * clamp(progress, 0, 1);
 
 /**
- * Create a complex tween using a lerp function that takes a progress
- * value from 0 to 1 and returns a value of type T.
+ * Apply an easing to a tween, returing a new tween.
  */
-export const tweenWith = <T>(
-  lerp: Lerp<T>,
-  duration: number,
-  easing: Easing.Easing = Easing.linear,
-): Animation<T> => {
-  const anim = (frame: number) =>
-    lerp(easing(frameToProgress(frame, duration)));
+export const ease =
+  <T>(tween: Tween<T>, easing: Easing.Easing = Easing.linear): Tween<T> =>
+  (progress: number) =>
+    tween(easing(progress));
+
+/**
+ * Create an animation for a number value between `from` and `to`,
+ * applying an optional easing function.
+ */
+export const tween =
+  (
+    from: number,
+    to: number,
+    easing: Easing.Easing = Easing.linear,
+  ): Tween<number> =>
+  (progress: number) =>
+    lerp(from, to, easing(progress));
+
+/**
+ * Create an animation that returns a value for a given frame.
+ *
+ * @example
+ * const anim = anim(tween(0, 100), 1000);
+ * anim(0); // 0
+ * anim(500); // 50
+ * anim(1000); // 100
+ *
+ * @argument tween: Tween<T> - The tween to animate.
+ * @argument duration: number - The duration of the animation in milliseconds.
+ * @returns an animation function that takes a frame number and returns a value.
+ */
+export const anim = <T>(tween: Tween<T>, duration: number): Animation<T> => {
+  const anim = (frame: number) => tween(frameToProgress(frame, duration));
   anim.duration = duration;
   return anim;
 };
-
-/**
- * Create a tweening function that takes a frame number and returns a number
- * between `from` and `to`.
- */
-export const tween = (
-  from: number,
-  to: number,
-  duration: number,
-  easing: Easing.Easing = Easing.linear,
-): Animation<number> =>
-  tweenWith((progress) => lerp(from, to, progress), duration, easing);
 
 /**
  * Delay an animation by a given duration
