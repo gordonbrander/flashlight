@@ -1,0 +1,32 @@
+{
+  "name": "flashlight",
+  "version": "0.0.1",
+  "description": "Pure functional animation library",
+  "main": "main.ts",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "dev": "vite",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gordonbrander/flashlight.git"
+  },
+  "keywords": [
+    "animation",
+    "ui",
+    "tween",
+    "easing"
+  ],
+  "author": "Gordon Brander",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gordonbrander/flashlight/issues"
+  },
+  "homepage": "https://github.com/gordonbrander/flashlight#readme",
+  "devDependencies": {
+    "vite": "^6.2.3"
+  }
+}

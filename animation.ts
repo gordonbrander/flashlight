@@ -26,8 +26,11 @@ export const progressToFrame = (progress: number, duration: number): number =>
   clamp(progress * duration, 0, duration);
 
 /** Convert an elapsed time in milliseconds to a frame number */
-export const elapsedToFrame = (elapsedMs: number, fps: number = 60): number =>
-  Math.floor(elapsedMs / (1000 / fps));
+export const elapsedToFrame = (
+  start: number,
+  now: number,
+  fps: number = 60,
+): number => Math.floor((now - start) / (1000 / fps));
 
 /** Linearly interpolate between two values using a relative progress value betwen 0 and 1 */
 export const lerp = (from: number, to: number, progress: number) =>
@@ -72,6 +75,12 @@ export const anim = <T>(tween: Tween<T>, duration: number): Animation<T> => {
   anim.duration = duration;
   return anim;
 };
+
+/** Convert an animation back to a relative tween */
+export const animToTween =
+  <T>(anim: Animation<T>): Tween<T> =>
+  (progress: number): T =>
+    anim(progressToFrame(progress, anim.duration));
 
 /**
  * Delay an animation by a given duration
@@ -130,11 +139,11 @@ export const track = <T>(
 /**
  * Trigger a script on a keyframe.
  * @example
- * const fx = effect(100, () => console.log('Hello World!'));
+ * const fx = trigger(100, () => console.log('Hello World!'));
  * fx(1); // No-op
  * fx(100); // "Hello World!"
  */
-export const effect =
+export const trigger =
   (keyframe: number, fx: () => void) =>
   (frame: number): void => {
     if (frame === keyframe) {
